@@ -50,18 +50,14 @@ tables = [
     }
 ]
 
-def home(cursor, context, choice = None):
+def home():
     os.system('cls')
     for i, table in enumerate(tables):
         name = table.get('name')
         printColor(f'{i + 1} - {name}', c.CYAN)
     chosenNum = getInputInt('\nPlease Choose a Number Above') - 1
-    # if user chooses to write to database
-    if choice == 'w':
-        write(cursor, context, chosenNum, choice)
-    # if user chooses to read from database
-    elif choice == 'r':
-        read(cursor, context, chosenNum, choice)
+    if chosenNum >= 0 and chosenNum < len(tables): return chosenNum
+    return home()
     
         
     
@@ -72,11 +68,13 @@ def greeting(cursor, context):
     if choice == 'r':
         printColor('\nHappy Reading!', c.BLUE)
         time.sleep(1.5)
-        home(cursor, context, choice)
+        index = home()
+        read(cursor, context, index)
     elif choice == 'w':
         printColor('\nHappy Writing!', c.BLUE)
         time.sleep(1.5)
-        home(cursor, context, choice)
+        index = home()
+        write(cursor, context, index)
     else:
         printColor('\nNot a valid option', c.WARNING)
         time.sleep(2.0)
@@ -84,39 +82,35 @@ def greeting(cursor, context):
     
     
     
-def write(cursor, context, chosenNum, choice):
-    if chosenNum >= 0 and chosenNum < len(tables):
-        result = tables[chosenNum]['inputGetter']()
-        query = tables[chosenNum]['query'] 
-        try:
-            cursor.execute(query, result)
-            context.commit()
-            name = tables[chosenNum]['name']
-            printColor(f'\n Data Saved to {name}', c.GREEN)
-            time.sleep(2.0)
-            return home(cursor, context, choice)
-        except mysql.connector.Error as err:
-            printColor(err, c.FAIL)
-            input('\nPress Enter to Continue...')
-            return home(cursor, context, choice)
-    else:
-        printColor('Not a valid number', c.WARNING)
-        input('\nPress Enter to continue...')
-        return home(cursor, context, choice)
+def write(cursor, context, index):
+    result = tables[index]['inputGetter']()
+    query = tables[index]['query'] 
+    try:
+        cursor.execute(query, result)
+        context.commit()
+        name = tables[index]['name']
+        printColor(f'\n Data Saved to {name}', c.GREEN)
+        time.sleep(2.0)
+        return greeting(cursor, context)
+    except mysql.connector.Error as err:
+        printColor(err, c.FAIL)
+        input('\nPress Enter to Continue...')
+        return greeting(cursor, context)
     
     
     
-def read(cursor, context, chosenNum, choice):
-    if chosenNum >= 0 and chosenNum < len(tables):
-        try:
-            printTable(cursor, context, tables[chosenNum]['table'])
-            printColor('\nPress Enter to Return to the Main Menu...')
-            return home(cursor, context, choice)
-        except mysql.connector.Error as err:
-            printColor(err, c.FAIL)
-            input('\nPress Enter to Continue...')
-            return home(cursor, context, choice)
-    else:
-        printColor('Not a valid number', c.WARNING)
-        input('\nPress Enter to continue...')
-        return home(cursor, context, choice)
+def read(cursor, context, index):
+    tableName = tables[index]['table']
+    try:
+        query = f'select * from {tableName}'
+        cursor.execute(query)
+        context.commit()
+        results = cursor.fetchall()
+        printTable(cursor, results)
+        printColor('\nPress Enter to Continue...', c.GREEN)
+        input()
+        return greeting(cursor, context)
+    except mysql.connector.Error as err:
+        printColor(err, c.FAIL)
+        input('\nPress Enter to Continue...')
+        return greeting(cursor, context)

@@ -8,6 +8,6 @@ context = mysql.connector.connect(
     database = "manga_site"
 )
 
-cursor = context.cursor()
+cursor = context.cursor(buffered=True)
 
 greeting(cursor, context)
