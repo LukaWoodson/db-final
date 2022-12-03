@@ -13,6 +13,8 @@ class colors:
 def printColor(message, color):
     print(f'{color}{message}{colors.BASE}')
     
+# copied and modified from stackoverflow
+# https://stackoverflow.com/questions/10865483/print-results-in-mysql-format-with-python    
 def printTable(cursor, results):    
     widths = []
     columns = []
@@ -32,9 +34,9 @@ def printTable(cursor, results):
         tavnit += ' %-'+'%ss |' % (w,)
         separator += '-'*w + '--+'
 
-    print(f'\n{separator}')
-    print(tavnit % tuple(columns))
-    print(separator)
+    printColor(f'\n{separator}', colors.HEADER)
+    printColor(tavnit % tuple(columns), colors.WARNING)
+    printColor(separator, colors.HEADER)
     for row in results:
-        print(tavnit % row)
-    print(separator)
+        printColor(tavnit % row, colors.CYAN)
+    printColor(separator, colors.HEADER)
